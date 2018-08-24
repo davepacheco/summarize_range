@@ -1,0 +1,38 @@
+test: empty input
+0
+test: basic sequence (5-10)
+5 - 10
+0
+test: basic value (7)
+7
+0
+test: complex multiple-range input
+3, 7 - 12, 15, 17 - 18, 31 - 42
+0
+test: too many fields (line 1)
+error: line 1: too many fields
+1
+test: too many fields (after emitting some ranges)
+5 - 10error: line 8: too many fields
+1
+test: unsorted input (line 1)
+error: line 2: unsorted input
+1
+test: unsorted input (after emitting some ranges)
+88 - 94, 97error: line 10: unsorted input
+1
+test: 0 value
+error: line 1: expected positive integer
+1
+test: negative value
+error: line 1: expected positive integer
+1
+test: trailing characters
+12 - 13error: line 4: expected positive integer
+1
+test: large input (1 to 10,000,001)
+1 - 10000001
+0
+test: large input (10,000,001 to 20,000,001)
+10000001 - 20000001
+0

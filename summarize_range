@@ -1,0 +1,105 @@
+#!/usr/bin/env awk -f
+
+#
+# summarize_range: takes a newline-separated, sorted list of positive integers
+# on stdin and produces a human-readable summary of the integer ranges.
+#
+# Examples:
+#
+#    `seq 1 10 | summarize_range`
+#        => "1 - 10"
+#
+#    `(seq 5 10; echo 12; seq 17 20) | summarize_range`
+#        => "5 - 10, 12, 17 - 20"
+#
+
+#
+# Notify the user of an input error on the current line and exit with a non-zero
+# status.
+#
+function fatal(message) {
+	if (!first) {
+		printf("\r");
+	}
+	printf("error: line %d: %s\n", NR, message);
+	failed = 1;
+	exit 1;
+}
+
+#
+# Print out a summary of the current range.
+#
+function rangeEnd() {
+	if (!first) {
+		printf(", ");
+	} else {
+		first = 0;
+	}
+
+	if (start == last) {
+		printf("%d", start);
+	} else {
+		printf("%d - %d", start, last);
+	}
+
+	# Update the start of the current range.
+	start = $1;
+};
+
+#
+# Set up the initial state.
+#
+BEGIN {
+	last = -1;	# last value seen (-1 means none)
+	start = -1;	# start of the current range (-1 means none)
+	first = 1;	# boolean indicating whether we've printed anything
+	failed = 0;	# boolean indicating a fatal error
+}
+
+#
+# Check for obvious bad-input conditions.
+#
+NF > 1 {
+	fatal("too many fields");
+}
+
+last != -1 && $1 < last {
+	fatal("unsorted input");
+}
+
+!/^[1-9][0-9]*$/{
+	fatal("expected positive integer");
+}
+
+#
+# If we're inside a range (last != -1) and we encounter a value that's not 
+# the immediate next value, then report the end of the current range.
+#
+last != -1 && $1 != last + 1 {
+	rangeEnd();
+}
+
+#
+# Similarly, if we're at the end of input (END and !failed) and we're inside a
+# range (last != -1), then print the current range and a final newline.
+#
+END {
+	if (!failed && last != -1) {
+		rangeEnd();
+		printf("\n");
+	}
+}
+
+#
+# Always record the last value seen.
+#
+{
+	last = $1;
+}
+
+#
+# On the first row, the start of the current range is the current value.
+#
+start == -1 {
+	start = last;
+}
